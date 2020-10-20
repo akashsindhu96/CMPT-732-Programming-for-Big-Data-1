@@ -1,0 +1,33 @@
+Name: Akash Sindhu
+Student ID: 301430033
+
+1. How much of a difference did the .cache() make in your Reddit ETL code?
+
+Ans: There was not much time difference tho.
+Without .cache()
+real    0m46.189s
+user    1m7.644s
+sys     0m10.745s
+
+With cache()
+real    0m35.123s
+user    0m53.944s
+sys     0m8.429s
+
+
+2. When would .cache() make code slower than without?
+
+Ans:
+1. When cache is very large, and larger than the executor's cache memory, it will start to store in harddrive, which is slower than memory.
+2. If the amount of cache data is less, less work is required in the next steps, so the code is going to be faster if we have less cache data.
+
+
+3. Under what conditions will the broadcast join be faster than an actual join?
+
+Ans: when broadcast is small enough, broadcast joins are fast as they require minimal data shuffling over the network.
+Example: when we need to join many copies of small data to large data that is within the threshold of memory and network limitations. Like we did in relative_score_bcast.py
+
+
+4. When will the broadcast join be slower?
+
+Ans: Above a certain threshold, however broadcast joins tend to be less reliable and performant than shuffle based alogorithms, due to bottlenecks in memory and networks.

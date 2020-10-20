@@ -1,0 +1,32 @@
+Name: Akash Sindhu 
+ID: 301430033
+
+
+
+1. In the WikipediaPopular class, it would be much more interesting to find the page that is most popular, not just the view count (as we did with Spark). What would be necessary to modify your class to do this? (You don't have to actually implement it.)
+
+Ans: For java part, while writing to the contect.write(key, value), the value will be the tuple instead of int. Also, considering I am using the LongPairWritable class to make pairs. 
+
+
+
+2. An RDD has many methods: it can do many more useful tricks than were at hand with MapReduce. Write a sentence or two to explain the difference between .map and .flatMap. Which is more like the MapReduce concept of mapping?
+
+Ans: the basic difference between them is .map() returns the same number of output as inputs but .flatmap() can return different number of outputs than inputs. .flatmap() can be used to get one dimensional structure given the input is multidimensional. The mapping function of .map() returns only one item whereas function in .flatmap() returns a list of elements as an iterator and output is flattened into one dimensional. So, I think .flatmap() is more like mapreduce type of thing. 
+
+
+3. Do the same for .reduce and .reduceByKey. Which is more like the MapReduce concept of reducing?
+
+Ans: the output of .reduce() is single value becuase its function takes two values and return one. The output of .reduceByKey() is number of unique key, value pairs where keys are aggregated using the function it takes. the output of .reduceByKey() is a RDD. I think .reduceByKey() is more like a reducer in mapreduce. 
+
+
+4. When finding popular Wikipedia pages, the maximum number of page views is certainly unique, but the most popular page might be a tie. What would your improved Python implementation do if there were two pages with the same highest number of page views in an hour? What would be necessary to make your code find all of the pages views the maximum number of times? (Again, you don't have to actually implement this.)
+
+Ans: If there are two pages with the same highest number of pages views in an hour, then I will return the title of both pages and sum the pages views. I can do this by doing something like this: 
+
+x = ('date', (5, 'aka'))
+y = ('date', (5, 'aaahhh'))
+
+// I will add this statement in the .reduceByKey() rdd method. 
+if x[1][0] == y[1][0]:
+	return (x[0], (x[1][0] + y[1][0], x[1][1], y[1][1])) # return ('date', (5 + 5, 'aka', 'aaahhh'))
+

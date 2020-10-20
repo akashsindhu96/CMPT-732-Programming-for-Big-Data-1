@@ -1,0 +1,148 @@
+Name: Akash Sindhu
+
+1. In the Reddit averages execution plan, which fields were loaded? How was the average computed (and was a combiner-like step done)?
+
+Ans: Fields loads in memory:
+
+== Physical Plan ==
+*(2) HashAggregate(keys=[subreddit#15], functions=[avg(cast(score#13 as bigint))], output=[subreddit#15, average#45])
++- Exchange hashpartitioning(subreddit#15, 200)
+   +- *(1) HashAggregate(keys=[subreddit#15], functions=[partial_avg(cast(score#13 as bigint))], output=[subreddit#15, sum#50, count#51L])
+      +- *(1) Project [subreddit#15, score#13]
+         +- *(1) FileScan json [score#13,subreddit#15] Batched: false, Format: JSON, Location: InMemoryFileIndex[file:/C:/Users/akash/Downloads/SFU/Sem
+ester_1/cmpt_732/a5/datasets/reddit-1], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<score:int,subreddit:string>
+
+fields loaded are:
+1. Filescan to read the file.
+2. combiner like Partial average using the hashaggregate and patial_avg() on each partition.
+3. reducer like operation to be done on all patitions to find the final average.
+
+2.What was the running time for your Reddit averages implementations in the five scenarios described above? How much difference did Python implementation make (PyPy vs the default CPython)? Why was it large for RDDs but not for DataFrames?
+
+Ans:
+MapReduce Java Implementation:
+real    1m33.746s
+user    0m5.868s
+sys     0m0.404s
+
+Spark DataFrames (with CPython)
+real    0m57.916s
+user    0m23.980s
+sys     0m1.496s
+
+Spark RDDs (with CPython)
+real    2m44.713s
+user    0m17.384s
+sys     0m1.472s
+
+Spark DataFrames (with PyPy)
+real    0m54.865s
+user    0m22.916s
+sys     0m1.688s
+
+Spark RDDs (with PyPy)
+real    0m54.181s
+user    0m15.276s
+sys     0m1.320s
+
+Spark dataframe time difference between CPython and PYPY is 57.916s - 54.865s = 3.051s.
+Spark RDDs time difference between CPython and PYPY is 2m44.713s - 0m54.181s = 110.53200s.
+
+The time difference in spark dataframe is less because dataframe is already very fast and there is no native python functions code we are using in dataframe. All the code implementation is using pyspark sql dataframe functions or methods, so there is no room left for the pypy to optimise the code even faster. Dataframes uses optimizer to optimizes the code before execution and tungstun architecture which is considered to be low level and faster. Rdd uses row operations which are difficult and slow in terms of memory where as dataframe uses column operations which are faster becuase our memory works better in such a way. 
+
+3. How much of a difference did the broadcast hint make to the Wikipedia popular code's running time (and on what data set)?
+
+Ans: Using the pagecount-3 dataset
+with broadcast()
+Execution Time: 55.696429637260735
+real    1m10.583s
+user    0m30.128s
+sys     0m2.204s
+
+without broadcast()
+Execution Time: 66.65335940383375
+real    1m21.664s
+user    0m32.904s
+sys     0m2.360s
+
+with broadcast is slightly faster than without broadcast.
+
+
+4. How did the Wikipedia popular execution plan differ with and without the broadcast hint?
+
+Ans:
+without broadcast()
+
+== Physical Plan ==
+*(7) Sort [hour#15 ASC NULLS FIRST], true, 0
++- Exchange rangepartitioning(hour#15 ASC NULLS FIRST, 200)
+   +- *(6) Project [hour#15, title#1, views#59]
+      +- *(6) SortMergeJoin [hour#15, views#2], [hour#62, views#59], Inner
+         :- *(2) Sort [hour#15 ASC NULLS FIRST, views#2 ASC NULLS FIRST], false, 0
+         :  +- Exchange hashpartitioning(hour#15, views#2, 200)
+         :     +- *(1) Filter (isnotnull(hour#15) && isnotnull(views#2))
+         :        +- InMemoryTableScan [title#1, views#2, hour#15], [isnotnull(hour#15), isnotnull(views#2)]
+         :              +- InMemoryRelation [language#0, title#1, views#2, bytes#3, hour#15], StorageLevel(disk, memory, deserialized, 1 replicas)
+         :                    +- *(2) Project [language#0, title#1, views#2, bytes#3, pythonUDF0#27 AS hour#15]
+         :                       +- BatchEvalPython [path_to_hour(filename#8)], [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#27]
+         :                          +- *(1) Filter ((((isnotnull(language#0) && isnotnull(title#1)) && (language#0 = en)) && NOT (title#1 = Main_Page)) && (StartsWith(title#1, Special:) = false))
+         :                             +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+         :                                +- *(1) FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, Format: CSV, Location: InMemoryFileIndex[file:/C:/Users/akash/Downloads/SFU/Semester_1/cmpt_732/a5/datasets/pagecounts-1], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+         +- *(5) Sort [hour#62 ASC NULLS FIRST, views#59 ASC NULLS FIRST], false, 0
+            +- Exchange hashpartitioning(hour#62, views#59, 200)
+               +- *(4) Filter isnotnull(views#59)
+                  +- *(4) HashAggregate(keys=[hour#62], functions=[max(views#2)])
+                     +- Exchange hashpartitioning(hour#62, 200)
+                        +- *(3) HashAggregate(keys=[hour#62], functions=[partial_max(views#2)])
+                           +- *(3) Filter isnotnull(hour#62)
+                              +- InMemoryTableScan [views#2, hour#62], [isnotnull(hour#62)]
+                                    +- InMemoryRelation [language#0, title#1, views#2, bytes#3, hour#62], StorageLevel(disk, memory, deserialized, 1 replicas)
+                                          +- *(2) Project [language#0, title#1, views#2, bytes#3, pythonUDF0#27 AS hour#15]
+                                             +- BatchEvalPython [path_to_hour(filename#8)], [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#27]
+                                                +- *(1) Filter ((((isnotnull(language#0) && isnotnull(title#1)) && (language#0 = en)) && NOT (title#1 = Main_Page)) && (StartsWith(title#1, Special:) = false))
+                                                   +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+                                                      +- *(1) FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, Format: CSV, Location: InMemoryFileIndex[file:/C:/Users/akash/Downloads/SFU/Semester_1/cmpt_732/a5/datasets/pagecounts-1], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+
+
+with broadcast()
+
+== Physical Plan ==
+*(4) Sort [hour#15 ASC NULLS FIRST], true, 0
++- Exchange rangepartitioning(hour#15 ASC NULLS FIRST, 200)
+   +- *(3) Project [hour#15, title#1, views#59]
+      +- *(3) BroadcastHashJoin [hour#15, views#2], [hour#62, views#59], Inner, BuildRight
+         :- *(3) Filter (isnotnull(hour#15) && isnotnull(views#2))
+         :  +- InMemoryTableScan [title#1, views#2, hour#15], [isnotnull(hour#15), isnotnull(views#2)]
+         :        +- InMemoryRelation [language#0, title#1, views#2, bytes#3, hour#15], StorageLevel(disk, memory, deserialized, 1 replicas)
+         :              +- *(2) Project [language#0, title#1, views#2, bytes#3, pythonUDF0#27 AS hour#15]
+         :                 +- BatchEvalPython [path_to_hour(filename#8)], [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#27]
+         :                    +- *(1) Filter ((((isnotnull(language#0) && isnotnull(title#1)) && (language#0 = en)) && NOT (title#1 = Main_Page)) && (StartsWith(title#1, Special:) = false))
+         :                       +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+         :                          +- *(1) FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, Format: CSV, Location: InMemoryFileIndex[file:/C:/Users/akash/Downloads/SFU/Semester_1/cmpt_732/a5/datasets/pagecounts-1], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+         +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, string, true], input[1, int, false]))
+            +- *(2) Filter isnotnull(views#59)
+               +- *(2) HashAggregate(keys=[hour#62], functions=[max(views#2)])
+                  +- Exchange hashpartitioning(hour#62, 200)
+                     +- *(1) HashAggregate(keys=[hour#62], functions=[partial_max(views#2)])
+                        +- *(1) Filter isnotnull(hour#62)
+                           +- InMemoryTableScan [views#2, hour#62], [isnotnull(hour#62)]
+                                 +- InMemoryRelation [language#0, title#1, views#2, bytes#3, hour#62], StorageLevel(disk, memory, deserialized, 1 replicas)
+                                       +- *(2) Project [language#0, title#1, views#2, bytes#3, pythonUDF0#27 AS hour#15]                                          +- BatchEvalPython [path_to_hour(filename#8)], [language#0, title#1, views#2, bytes#3, filename#8, pythonUDF0#27]
+                                             +- *(1) Filter ((((isnotnull(language#0) && isnotnull(title#1)) && (language#0 = en)) && NOT (title#1 = Main_Page)) && (StartsWith(title#1, Special:) = false))
+                                                +- *(1) Project [language#0, title#1, views#2, bytes#3, input_file_name() AS filename#8]
+                                                   +- *(1) FileScan csv [language#0,title#1,views#2,bytes#3] Batched: false, Format: CSV, Location: InMemoryFileIndex[file:/C:/Users/akash/Downloads/SFU/Semester_1/cmpt_732/a5/datasets/pagecounts-1], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<language:string,title:string,views:int,bytes:int>
+
+1. broadcast is using BroadcastHashJoin whereas without broadcast is using sortMergeJoin
+2. broadcast has less stages only (4) whereas without broadcast has more stages (7).
+3. broadcast has less sorting whereas without broadcast has more sorting stages in between which significantly increases the time.
+
+
+5. For the weather data question, did you prefer writing the “DataFrames + Python methods” style, or the “temp tables + SQL syntax” style form solving the problem? Which do you think produces more readable code?
+
+Ans: It depends on where I am working, where my code can be used in future and the problem set.
+1. If I am working in a team where some members are from database team with strong knowledge of SQL, then I will use
+the SQL or If I am working in a team with other datascientiest who have strong hands in python side development then I will use "Dataframes + python methods".
+2. The SQL is 2-3 seconds faster if that makes a difference.
+3. The syntex of SQL is pretty straightforward and easy as compared to dataframe + python.
+4. The dataframe + python has more highlevel so optimizer has more room to optimize the code which is good.
+5. The dataframe + python gives somewhat more methods/functions to use and gives a edge to the user to deal with complexity.

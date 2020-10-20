@@ -1,0 +1,51 @@
+Name: Akash Sindhu
+Student ID: 301430033
+
+1. Are there any parts of the original WordCount that still confuse you? If so, what?
+
+Ans: The assignment itself was self explanatory but I have some questions in mind related to java because I never code in java before this assignment and this week was a huge learning curve. Since, I have code in C and C++, I kinda knew how things are related to eachother. Python is my strong end from past two years so, I am excited for the rest of the assignments as they are in python.
+
+
+
+2. How did the output change when you submitted with -D mapreduce.job.reduces=3? Why would this be necessary if your job produced large output sets? 
+
+Ans: the output directory had three files instead of 1 because there were three reducers and each was producing the output. They worked in parallel to produce 3 files. 
+
+This will be necessary becuase our main aim is to reduce the work of reducer and if we have only 1 reducer then it has to do all the work. In distributed systems Parallelism is necessary to do the task in required time and take full advance of them. Also, 1 reducer will take too much time.  
+
+asa325@gateway:~/a1$ hdfs dfs -ls output/
+Found 4 items
+-rw-r--r--   2 asa325 hdfs          0 2020-09-18 13:29 output/_SUCCESS
+-rw-r--r--   2 asa325 hdfs      32734 2020-09-18 13:29 output/part-r-00000
+-rw-r--r--   2 asa325 hdfs      32856 2020-09-18 13:29 output/part-r-00001
+-rw-r--r--   2 asa325 hdfs      31510 2020-09-18 13:29 output/part-r-00002
+
+Job Counters
+     Launched map tasks=3
+     Launched reduce tasks=3
+     Data-local map tasks=3
+
+
+
+3. How was the -D mapreduce.job.reduces=0 output different?
+
+Ans: The output files has m which shows it is mapper (no reducer is used). Total of 3 map task are 
+
+asa325@gateway:~/a1$ hdfs dfs -ls output/
+Found 4 items
+-rw-r--r--   2 asa325 hdfs          0 2020-09-18 13:27 output/_SUCCESS
+-rw-r--r--   2 asa325 hdfs     897619 2020-09-18 13:27 output/part-m-00000
+-rw-r--r--   2 asa325 hdfs     622500 2020-09-18 13:27 output/part-m-00001
+-rw-r--r--   2 asa325 hdfs     194536 2020-09-18 13:27 output/part-m-00002
+
+Job Counters
+      Launched map tasks=3
+      Data-local map tasks=3
+      Total time spent by all maps in occupied slots (ms)=8470
+      Total time spent by all reduces in occupied slots (ms)=0
+
+
+
+4. Was there any noticeable difference in the running time of your RedditAverage with and without the combiner optimization?
+
+Ans: There was a little time difference I saw becuase combiner reduces the work of reducer. With combiner it took less time than without. 

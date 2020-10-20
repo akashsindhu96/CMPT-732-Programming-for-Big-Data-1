@@ -1,0 +1,69 @@
+Name: Akash Sindhu
+ID: 301430033
+
+
+1. What was wrong with the original wordcount-5 data set that made repartitioning worth it? Why did the program run faster after?
+
+Ans: there are 8 files in wordcount-5 and most of them are of different sizes. It is better to repartiton becuase it allows each partiton to have equal number of data to work with and all the executors will be used for similar amount of time and this increases the parallelism that we need while working with spark. It is a good technique to have number of partitions to be in multiple of number of executors. 
+
+
+2. The same fix does not make this code run faster on the wordcount-3 data set. (It may be slightly slower?) Why? [For once, the answer is not “the data set is too small”.]
+
+Ans: Considering we run the wordcount-3 with the same command as wordcount-5. The size of each file is similar in wordcount-3. So, each partition will have similar size data and this keeps the parallelism and decreases the time. 
+
+
+3. How could you modify the wordcount-5 input so that the word count code can process it and get the same results as fast as possible? (It's possible to get about another minute off the running time.)
+
+Ans: I will extract the files before passing as input to the spark-submit. I think this will save some time becuase spark will not have to extract the files. Also, I will try have files of same size in all partitions, if that I can do in real life somehow. 
+
+
+4. When experimenting with the number of partitions while estimating Euler's constant, you likely didn't see much difference for a range of values, and chose the final value in your code somewhere in that range. What range of partitions numbers was “good” (on the desktop/laptop where you were testing)?
+
+Ans: I was testing on CSIL linux machine. I checked number of partitions in the range (20-100), and found out that 45 works best for me with the least time. In general, 30-50 range was good for me. 
+
+
+5. How much overhead does it seem like Spark adds to a job? How much speedup did PyPy get over the usual Python implementation?
+
+Ans: 
+
+asa325@csil-cpu1:~/sfuhome/a3$ export PYSPARK_PYTHON=python3
+asa325@csil-cpu1:~/sfuhome/a3$ time ${SPARK_HOME}/bin/spark-submit euler.py 1000
+real    0m10.667s
+user    0m17.379s
+sys     0m1.376s
+
+
+asa325@csil-cpu1:~/sfuhome/a3$ time python euler_single.py 1000
+real    0m0.070s
+user    0m0.037s
+sys     0m0.008s
+
+As we can see above, the spark python code job took a lot more time than standalone python. 0m10.667s - 0m0.070s is the overhead. 
+
+
+asa325@csil-cpu1:~/sfuhome/a3$ time python euler_single.py 100000000
+real    1m18.703s
+user    1m18.644s
+sys     0m0.012s
+
+asa325@csil-cpu1:~/sfuhome/a3$ time ${PYPY} euler_single.py 100000000
+real    0m13.519s
+user    0m13.032s
+sys     0m0.080s
+
+PYPY is very fast as we can see above, the time difference is almost 1m18.703 - 0m13.519 = 1m05.184 which is significant. 
+
+
+asa325@csil-cpu1:~/sfuhome/a3$ export PYSPARK_PYTHON=${PYPY}
+asa325@csil-cpu1:~/sfuhome/a3$ time ${SPARK_HOME}/bin/spark-submit euler.py 100000000
+real    0m20.777s
+user    0m20.854s
+sys     0m1.522s
+
+asa325@csil-cpu1:~/sfuhome/a3$ export PYSPARK_PYTHON=python3
+asa325@csil-cpu1:~/sfuhome/a3$ time ${SPARK_HOME}/bin/spark-submit euler.py 100000000
+real    0m58.924s
+user    0m22.738s
+sys     0m1.761s
+
+As we can see above, the time difference is almost 3x between pypy and python in spark also.
