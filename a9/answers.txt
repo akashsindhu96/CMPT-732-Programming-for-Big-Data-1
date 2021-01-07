@@ -1,0 +1,72 @@
+# Akash Sindhu
+
+1. What is your best guess for the slope and intercept of the streaming points being produced?
+
+Ans: I got the these:
+    alpha/Intercept= -10.250546703541659
+    beta/slope = 61.12743824643719
+
+2. Is your streaming program's estimate of the slope and intercept getting better as the program runs? (That is: is the program aggregating all of the data from the start of time, or only those that have arrived since the last output?)
+
+Ans: Yes, streaming program's estimate of the slope and intercept getting better as the program runs as the program aggregate all the data from the start of time.
+
+3. In the colour classification question, what were your validation scores for the RGB and LAB pipelines?
+
+Ans: Validation score for RGB model: 0.626066718386346
+Validation score of LAB model: 0.7191621411947245
+
+4. When predicting the tmax values, did you over-fit the training data (and for which training/validation sets)?
+
+Ans: (without yesterday's temperature)
+tmax-1
+Validation data:
+r2 = 0.768327
+rmse = 5.204850
+
+Test data:
+r2 = 0.378062
+rmse = 9.121023
+
+tmax-2
+validation data:
+r2 = 0.787395
+rmse = 5.95976
+
+Test data:
+r2 = 0.776375
+rmse = 6.032841
+
+For tmax-1, the difference between the rmse values of validation and test is very large. This shows that there is overfitting.
+For tmax-2, the rmse values are very close, so this is better.
+
+5. What were your testing scores for your model with and without the “yesterday's temperature” feature?
+
+Ans: (without yesterday's data)
+R2 = 0.378062
+RMSE = 9.121023
+
+(with yesterday's data)
+R2 = 0.834036
+RMSE = 5.266949
+
+tmax-2:
+(without yesterday's data)
+R2 = 0.776375
+RMSE = 6.032841
+
+(with yesterday's data)
+R2 = 0.909519
+RMSE = 3.888925
+
+6. If you're using a tree-based model, you'll find a .featureImportances property that describes the relative importance of each feature (code commented out in weather_test.py; if not, skip this question). Have a look with and without the “yesterday's temperature” feature: do the results make sense and suggest that your model is making decisions reasonably? With “yesterday's temperature”, is it just predicting “same as yesterday”?
+
+Ans: tmax1:
+(without yesterday's data)
+(4,[0,1,2,3],[0.2528178022870996,0.1517438056515544,0.11280528391275754,0.4826331081485886])
+
+(with yesterday's data)
+(5,[0,1,2,3,4],[0.12624346249715618,0.08739591244837326,0.08967176092940507,0.2874115060906721,0.4092773580343934])
+
+Model is making sense because it is giving high importance to yesterday's temp. when it is included.
+If yesterday's temp. is not included, day_of_year is most important.
+With yesterday's temperature given as 12 degrees, today's temp. is predicted as 11.2245 degrees which is good.

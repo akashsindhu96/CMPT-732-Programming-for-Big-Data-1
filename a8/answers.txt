@@ -1,0 +1,34 @@
+Name: Akash Sindhu
+
+1. What did you see in the execution plan for the “join in Spark” solution? Why was the execution so fast (and the memory usage so small)?
+
+Ans: *(3) BroadcastHashJoin [partkey#25], [partkey#0], Inner, BuildRight
+*(3) BroadcastHashJoin [orderkey#50], [orderkey#19], Inner, BuildLeft
+ BroadcastHashJoin is performed for join in spark in this execution plan. In the above execution plan for the "join in Spark", we can see that the whole dataframe was not used for the join operation because there are pushed filters. Selected columns which are useful for the program were only used (i.e. only selective columns of a dataframe were filtered and used rather than using the whole dataframe). This makes the execution faster and the memory usage so small.
+
+2. What was the CREATE TABLE statement you used for the orders_parts table?
+
+Ans: session.execute("CREATE TABLE IF NOT EXISTS orders_parts ("
+                    "orderkey int, "
+                    "custkey int, "
+                    "orderstatus text, "
+                    "totalprice decimal, "
+                    "orderdate date, "
+                    "order_priority text, "
+                    "clerk text, "
+                    "ship_priority int, "
+                    "comment text, "
+                    "part_names set<text>, "
+                    "PRIMARY KEY (orderkey))")
+
+3. What were the running times of the two tpch_orders_* programs on the tpch2 data on the cluster? These orderkeys have results in that data set: 2579142 2816486 586119 441985 2863331.
+
+Ans: Time required for:
+    tpch_orders_denorm.py = 28s
+    tpch_orders_df.py = 39s
+The running time of tpch_orders_denom.py is less because we are just performing dataframe operations on a single table orders_parts. On the other hand, the running time of tpch_orders_df.py is more because we are loading dataframes from three tables, joining them and performing mentioned opertaions using dataframe functions.
+
+
+4. Consider the logic that you would have to implement to maintain the denormalized data (assuming that the orders table had the part_names column in the main data set). Write a few sentences on what you'd have to do when inserting/updating/deleting data in this case.
+
+Ans: Assuming that the orders table had the part_names column in the main data set, every insert,update and delete operation performed on the new table should be performed on the parts table as well. The actual orders table does not contain part_names. So we join orders, lineitem and part table inorder to perform insert, update or delete operations. If we perform insert operation on the orders table that contains part_names, we have to insert in the part table also since it contains the names of the part as well. Same is the case for update and delete operations.

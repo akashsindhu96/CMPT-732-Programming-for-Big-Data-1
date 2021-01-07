@@ -18,8 +18,15 @@ a5/output-pagecount/
 a5/output-reddit/
 a5/output-temp_range-2-sql/
 a5/spark-warehouse/
+a6/datasets/*
+a6/output/*
+a6/notes.txt/
+a7/test.py/
+a8/test.py/
+a9/_pycache_/*
+a9/test.py/
+a10/732-docker-cluster/*
+a10/docker_tutorial/
 project/
-
-
 pypy_env/
 venv/

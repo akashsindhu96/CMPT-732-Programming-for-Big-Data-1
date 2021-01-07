@@ -1,0 +1,50 @@
+Name: Akash Sindhu
+
+1. What happened when you inserted another row with the same primary key as an existing row?
+
+Ans: Existing row is overwritten and updated to the new values.
+
+2. What happened when you query a keyspace with replication factor 1 and one node down? How did it behave with replication factor 2 and a node down?
+
+Ans: When replication factor = 1, queries did not work as the data stored in the node was down.
+When replication factor = 2, quaries will work as there are more than one copies of data available on more than one node.
+
+3. How did the consistency level affect the results with the node up/down?
+
+Ans: if consistency is 1 and replication factor is more than 2, the data is available on more than one node. Even if one node is down, queries will work because one node is still up and consistency is 1.
+if consistency is ALL and replication factor is 2, queries will not work on nodes which are down and only work for nodes which are up. So, data will not be consistent or up to date.
+
+
+4. Which of the WHERE id=? values returned successfully with CONSISTENCY ALL when one of the nodes was down? Why do you think some could be returned but not others?
+
+Ans: With consistency all and one of the nodes being down, id = 1 and id = 5 returned successfully while rest of them returned an error with the message "Cannot achieve consistency level ALL". This is because node 1 and 5 was up and rest was down.
+
+5. What was the CREATE TABLE statement you used for the nasalogs table? What was the primary key you choose, and why?
+
+Ans: CREATE TABLE nasalogs(
+  id uuid,
+  host text,
+  bytes int,
+  datetime timestamp,
+  path text,
+  PRIMARY KEY (host,id)
+);
+
+I choose host and id as the primary key because the host is not unique. id is UUID which is unique. Also, with host as first primary key we can aggregate by it.
+
+6. What was the CQL query you used (or tried) to get the total number of bytes?
+
+Ans: I used two.
+1.
+table = session.execute("SELECT path, bytes FROM table_name WHERE host='uplherc.upl.com'")
+    cont = 1
+    total_bytes = 0
+    for row in table:
+        if row.bytes:
+            cont += 1
+            total_bytes += row.bytes
+    print("No. of times uplherc.upl.com occurred: {}".format(cont))
+    print("No. of bytes: {}".format(total_bytes))
+
+2.
+SELECT host, sum(bytes) FROM nasalogs GROUP BY host;

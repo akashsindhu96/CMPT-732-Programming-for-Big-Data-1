@@ -1,0 +1,22 @@
+
+1. What happened to the HDFS file when one of the nodes it was stored on failed?
+
+Ans: When node failed, the name node webpage showed 3 nodes instead of 4 datanodes. When the node was rebooted and it showed node failure, data that was registered to a dead DataNode is not available to HDFS any more.The NameNode constantly tracks which blocks need to be replicated and initiates replication whenever necessary. When we reloaded the node, the web frontend showed node failure. The NameNode did not receive any acknowledgement from the datanode which was down (reloaded) so it showed failure at that node. The NameNode then tries to maintain the replication and the data in that block is given to another node.
+
+
+2.How did YARN/MapReduce/Spark behave when one of the compute nodes disappeared?
+
+Ans: 
+
+ERROR cluster.YarnScheduler: Lost executor 5 on hadoop3: Container marked as failed: container_1541687081069_0003_01_000006 on host: hadoop3. Exit status: -100. Diagnostics: Container released on a *lost* node
+WARN scheduler.TaskSetManager: Lost task 91.0 in stage 0.0 (TID 104, hadoop3, executor 5): ExecutorLostFailure (executor 5 exited caused by one of the running tasks) Reason: Container marked as failed: container_1541687081069_0003_01_000006 on host: hadoop3. Exit status: -100. Diagnostics: Container released on a *lost* node
+WARN scheduler.TaskSetManager: Lost task 94.0 in stage 0.0 (TID 108, hadoop3, executor 5): ExecutorLostFailure (executor 5 exited caused by one of the running tasks) Reason: Container marked as failed: container_1541687081069_0003_01_000006 on host: hadoop3. Exit status: -100. Diagnostics: Container released on a *lost* node
+WARN scheduler.TaskSetManager: Lost task 90.0 in stage 0.0 (TID 103, hadoop3, executor 5): ExecutorLostFailure (executor 5 exited caused by one of the running tasks) Reason: Container marked as failed: container_1541687081069_0003_01_000006 on host: hadoop3. Exit status: -100. Diagnostics: Container released on a *lost* node
+WARN scheduler.TaskSetManager: Lost task 81.0 in stage 0.0 (TID 99, hadoop3, executor 5): ExecutorLostFailure (executor 5 exited caused by one of the running tasks) Reason: Container marked as failed: container_1541687081069_0003_01_000006 on host: hadoop3. Exit status: -100. Diagnostics: Container released on a *lost* node
+
+When one of the compute nodes disappeared, the node becomes dead and the tasks in that node fail. So, these tasks (TID 91,94,90,81) will be performed in some other node. The yarn manager throws an error of node failure along with removing and shifting it's work to other nodes. Now, the job of the lost executor will be carried out by remaining nodes and it's computation is put in queue for both of the remaining nodes. After throwing the error message the job continues to proceed until it finishes the computation. This shows the robustness of the system and even after the node failure the job is finished. It might take a little longer to finish the job but it doesn't stop the computation, which is very beneficial as risk of data failure reduces.
+
+
+3. Were there more things you'd like to try with this cluster, or anything you did try that you think should have been in this assignment?
+
+Ans: I would like to know how the YARN works with cache and check points in this cluster.

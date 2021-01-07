@@ -37,7 +37,7 @@ if __name__ == '__main__':
     output = sys.argv[2]
     spark = SparkSession.builder.appName('wikipedia popular df').getOrCreate()
     assert spark.version >= '2.4' # make sure we have Spark 2.4+
-    # spark.sparkContext.setLogLevel('WARN')
+    spark.sparkContext.setLogLevel('WARN')
     sc = spark.sparkContext
     start_time = timer()
     # for i in range(5):
